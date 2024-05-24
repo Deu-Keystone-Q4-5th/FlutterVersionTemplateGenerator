@@ -8,11 +8,17 @@ config_path = config_folder + "/config.json"
 
 
 class Config:
-    def __init__(self, json_data: json = None):
+    def __init__(self, **kwargs):
         self.comment1: str = "알라딘 API Secret Key 입니다."
         self.secret_key: str = ""
         self.comment2: str = "하루에 가능한 API 요청 수를 정합니다."
         self.request_per_day: int = 5000
+
+        if (kwargs.get("secret_key")) :
+            self.secret_key = kwargs.get("secret_key")
+        if (kwargs.get("request_per_day")) :
+            self.request_per_day = kwargs.get("request_per_day")
+
 
 
 class ConfigManager:
@@ -44,12 +50,14 @@ class ConfigManager:
 
     def load_config(self):
         thread = threading.Thread(target=self.__read_json__())
-        thread.run();
+        thread.run()
         return self.config
 
     def __read_json__(self):
         file_stream = open(config_path, "r")
-        self.config = json.load(file_stream, object_hook=Config)
+        s = file_stream.read()
+        obj = json.loads(s)
+        self.config = Config(secret_key= obj["secret_key"], request_per_day= obj["request_per_day"])
 
 
 configManager = ConfigManager()
