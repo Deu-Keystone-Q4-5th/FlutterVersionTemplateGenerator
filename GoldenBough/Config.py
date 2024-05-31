@@ -1,10 +1,8 @@
-import configparser
 import json
 import os
-import threading
 
 config_folder = "config"
-config_path = config_folder + "/config.json"
+config_path = os.path.join(config_folder, "config.json")
 
 
 class Config:
@@ -14,11 +12,10 @@ class Config:
         self.comment2: str = "하루에 가능한 API 요청 수를 정합니다."
         self.request_per_day: int = 5000
 
-        if (kwargs.get("secret_key")) :
+        if kwargs.get("secret_key"):
             self.secret_key = kwargs.get("secret_key")
-        if (kwargs.get("request_per_day")) :
+        if kwargs.get("request_per_day"):
             self.request_per_day = kwargs.get("request_per_day")
-
 
 
 class ConfigManager:
@@ -40,25 +37,25 @@ class ConfigManager:
 
     def save_config(self) -> None:
         json_str = json.dumps(self.config.__dict__, ensure_ascii=False, indent=4)
-        thread = threading.Thread(target=self.__write_json, args=(json_str,))
-        thread.run()
+        try:
+            self.__write_json(json_str)
+        except IOError as e:
+            print(f"Error saving config: {e}")
 
     def __write_json(self, data: str) -> None:
-        file_stream = open('config/config.json', 'w')
-        file_stream.write(data)
-        file_stream.close()
+        with open(config_path, 'w') as file_stream:
+            file_stream.write(data)
 
     def load_config(self):
-        thread = threading.Thread(target=self.__read_json__())
-        thread.run()
-        return self.config
+        try:
+            self.__read_json()
+        except IOError as e:
+            print(f"Error loading config: {e}")
 
-    def __read_json__(self):
-        file_stream = open(config_path, "r")
-        s = file_stream.read()
-        obj = json.loads(s)
-        self.config = Config(secret_key= obj["secret_key"], request_per_day= obj["request_per_day"])
+    def __read_json(self):
+        with open(config_path, "r") as file_stream:
+            obj = json.load(file_stream)
+            self.config = Config(secret_key=obj["secret_key"], request_per_day=obj["request_per_day"])
 
 
 configManager = ConfigManager()
-
