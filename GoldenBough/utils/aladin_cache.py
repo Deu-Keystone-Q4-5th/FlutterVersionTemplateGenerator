@@ -1,8 +1,5 @@
 import os
-
-
-
-path = "cache"
+from io import StringIO
 
 import pandas as pd
 from pathlib import Path
@@ -10,6 +7,9 @@ import aiofiles
 import asyncio
 import re
 import Config
+
+path = "cache"
+
 
 class WeeklyCacheManager:
     def __init__(self, cache_dir: str):
@@ -32,7 +32,8 @@ class WeeklyCacheManager:
         if file_path.exists():
             async with aiofiles.open(file_path, 'r', encoding="utf-8-sig") as f:
                 content = await f.read()
-            data = pd.read_csv(pd.compat.StringIO(content))
+
+            data = pd.read_csv(StringIO(content))
             print(f"Data loaded from {file_path}")
             return data
         else:
@@ -69,7 +70,8 @@ async def test():
     if cache_manager.is_week_cached(year, month, week):
         data = await cache_manager.load_weekly_data(year, month, week)
     else:
-        finder.filter_sold_out(True).specific_date(year, month, week).query("Bestseller").start_page(1).result_per_page(100).search_category(1)
+        finder.filter_sold_out(True).specific_date(year, month, week).query("Bestseller").start_page(1).result_per_page(
+            100).search_category(1)
         data = await finder.request_data()
         await cache_manager.save_weekly_data(data, year, month, week)
 
@@ -78,6 +80,7 @@ async def test():
 
     cached_weeks = cache_manager.get_cached_weeks()
     print("Cached weeks:", cached_weeks)
+
 
 if __name__ == "__main__":
     asyncio.run(test())
