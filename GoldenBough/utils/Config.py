@@ -2,7 +2,7 @@ import json
 import os
 
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-config_folder = os.path.join(base_dir, "GoldenBough/config")
+config_folder = os.path.join(base_dir, "GoldenBough", "config")
 config_file = "config.json"
 config_path = os.path.join(config_folder, config_file)
 
@@ -32,7 +32,7 @@ class ConfigManager:
                 except json.JSONDecodeError:
                     print("Error With Loading Config. Skipping...")
         else:
-            os.mkdir(config_path)
+            os.mkdir(config_folder)
 
         self.config = Config()
         self.save_config()
