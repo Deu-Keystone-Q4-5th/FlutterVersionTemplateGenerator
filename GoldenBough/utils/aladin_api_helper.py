@@ -1,14 +1,13 @@
+import os
+
 import aiohttp
 import asyncio
 import Config
 import pandas as pd
 
+from GoldenBough.utils.aladin_cache import WeeklyCacheManager
 
-def exclude_light_novel(data: pd.DataFrame) -> pd.DataFrame:
-    # Light Novel is not a literature!
-    if 'categoryName' in data.columns:
-        return data[~data['categoryName'].str.contains("라이트 노벨")]
-    return data
+cache_manager = WeeklyCacheManager(cache_dir=os.path.join(Config.base_dir, "GoldenBough/cache"))
 
 
 class AladinItemListFinder:
@@ -27,10 +26,6 @@ class AladinItemListFinder:
         self.month = -1
         self.week = -1
         self.category_id = 0
-
-    def set_xml(self, value: bool):
-        self.is_json = not value
-        return self
 
     def filter_sold_out(self, value: bool):
         self.will_filter_sold_out = value
@@ -96,19 +91,25 @@ class AladinItemListFinder:
                     print(response_json)
                     # books are in item list so
                     data = pd.DataFrame(response_json.get('item', []))
-                    return exclude_light_novel(data)
+                    return await self.exclude_light_novel(data)
                 else:
                     response.raise_for_status()
+
+    async def exclude_light_novel(self, data: pd.DataFrame) -> pd.DataFrame:
+        # Light Novel is not a literature!
+        if 'categoryName' in data.columns:
+            await cache_manager.save_weekly_data(data, self.year, self.month, self.week)
+            return data[~data['categoryName'].str.contains("라이트 노벨")]
+        return data
 
 
 class ApiRuntimeException(Exception):
     pass
 
 
-# Example usage with asyncio
-async def main():
+async def test():
     finder = AladinItemListFinder()
-    finder.set_xml(False).filter_sold_out(True).specific_date(2024, 5, 3).query("Bestseller").start_page(
+    finder.filter_sold_out(True).specific_date(2024, 5, 3).query("Bestseller").start_page(
         1).result_per_page(100).search_category(1)
     data = finder.request_data()
     print("test")
@@ -116,5 +117,5 @@ async def main():
     titles.to_csv("titles_all_no_lightnovel.csv", index=False, encoding="utf-8-sig")
 
 
-# Run the example
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(test())

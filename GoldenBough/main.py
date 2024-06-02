@@ -1,7 +1,7 @@
 
 try :
     import pywinstyles
-    import logger_manager
+    from GoldenBough.utils import logger_manager
     import spacy
     import numpy as np
     import pandas as pd
