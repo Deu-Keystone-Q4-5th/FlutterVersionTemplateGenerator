@@ -6,11 +6,12 @@ import Config
 import pandas as pd
 
 from GoldenBough.utils.aladin_cache import WeeklyCacheManager
+from GoldenBough.utils.requestAPI import apiImporter
 
 cache_manager = WeeklyCacheManager(cache_dir=os.path.join(Config.base_dir, "GoldenBough/cache"))
 
 
-class AladinItemListFinder:
+class AladinItemListFinder (apiImporter):
     def __init__(self):
         self.config_manager = Config.configManager
         self.url_base = "http://www.aladin.co.kr/ttb/api/ItemList.aspx"
@@ -78,7 +79,7 @@ class AladinItemListFinder:
         self.url = f"{self.url_base}?" + "&".join([f"{k}={v}" for k, v in args.items()])
         return self.url
 
-    async def request_data(self) -> pd.DataFrame:
+    async def request(self) -> pd.DataFrame:
         self.combine_settings()
         async with aiohttp.ClientSession() as session:
             async with session.get(self.url) as response:
@@ -111,7 +112,7 @@ async def test():
     finder = AladinItemListFinder()
     finder.filter_sold_out(True).specific_date(2024, 5, 3).query("Bestseller").start_page(
         1).result_per_page(100).search_category(1)
-    data = finder.request_data()
+    data = finder.request()
     print("test")
     titles = await data
     titles.to_csv("titles_all_no_lightnovel.csv", index=False, encoding="utf-8-sig")

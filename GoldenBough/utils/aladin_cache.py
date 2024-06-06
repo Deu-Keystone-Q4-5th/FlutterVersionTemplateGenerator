@@ -72,7 +72,7 @@ async def test():
     else:
         finder.filter_sold_out(True).specific_date(year, month, week).query("Bestseller").start_page(1).result_per_page(
             100).search_category(1)
-        data = await finder.request_data()
+        data = await finder.request()
         await cache_manager.save_weekly_data(data, year, month, week)
 
     # Use the data
