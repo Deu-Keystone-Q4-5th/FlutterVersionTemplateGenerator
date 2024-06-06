@@ -1,8 +1,8 @@
 import json
 import os
 
-base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-config_folder = os.path.join(base_dir, "GoldenBough", "config")
+base_dir = os.path.dirname((os.path.dirname(__file__)))
+config_folder = (os.path.join(base_dir, "config"))
 config_file = "config.json"
 config_path = os.path.join(config_folder, config_file)
 user_data_path = os.path.join(config_folder, "user_data.json")
@@ -27,11 +27,14 @@ class Config:
 
 
 class UserData:
-    def __init__(self, **kwargs):
+    def __init__(self, stars: list = None, **kwargs):
         self.lang = "ko"
-
+        self.stars = ['1234']
         if kwargs.get("lang"):
             self.lang = kwargs.get("lang")
+
+        if stars is not None:
+            self.stars = stars
 
 
 class ConfigManager:
@@ -50,7 +53,6 @@ class ConfigManager:
                 if os.path.exists(user_data_path) and os.path.isfile(user_data_path):
                     self.load_user_data()
                     is_user_data_loaded = True
-                return
             except json.JSONDecodeError:
                 print("Error With Loading Config. Skipping...")
         else:
@@ -103,3 +105,12 @@ class ConfigManager:
 
 
 configManager = ConfigManager()
+
+
+def main():
+    lst = configManager.user_data.stars
+    print(lst)
+
+
+if __name__ == "__main__":
+    main()

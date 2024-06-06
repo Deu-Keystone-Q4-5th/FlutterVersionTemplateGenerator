@@ -1,16 +1,14 @@
+import asyncio
 import os
-import time
-from datetime import datetime
 
 import aiohttp
-import asyncio
 import pandas as pd
 
-from GoldenBough.utils import datetimeutils, Config
-from GoldenBough.utils.aladin_cache import WeeklyCacheManager
-from GoldenBough.utils.requestAPI import apiImporter
+from utils import datetimeutils, Config, npl3
+from utils.aladin_cache import WeeklyCacheManager
+from utils.requestAPI import apiImporter
 
-cache_manager = WeeklyCacheManager(cache_dir=os.path.join(Config.base_dir, "GoldenBough/cache"))
+cache_manager = WeeklyCacheManager(cache_dir=os.path.join(Config.base_dir, "cache"))
 
 
 class AladinItemListFinder (apiImporter):
@@ -91,21 +89,26 @@ class AladinItemListFinder (apiImporter):
 
                     # raise exception when json contains ERROR MESSAGE.
                     if "errorMessage" in response_json:
-                        raise ApiRuntimeException(response_json["errorMessage"])
+                        raise ApiRuntimeException(response_json["errorMessage"] + Config.config_folder)
                     print(response_json)
                     # books are in item list so
                     page = response_json["startIndex"]
                     data = pd.DataFrame(response_json.get('item', []))
-                    return await self.exclude_light_novel(data, page)
+                    print("got items")
+                    return await self.filter_data(data, page)
                 else:
                     response.raise_for_status()
 
-    async def exclude_light_novel(self, data: pd.DataFrame, page: int) -> pd.DataFrame:
+    async def filter_data(self, data: pd.DataFrame, page: int) -> pd.DataFrame:
+        print("filtering...")
         # Light Novel is not a literature!
         if 'categoryName' in data.columns:
-            modified_data = data[~data['categoryName'].str.contains("라이트 노벨")]
-            await cache_manager.save_weekly_data(modified_data, self.year, self.month, self.week, page)
-            return modified_data
+            data = await npl3.process_text(data)
+            data = data[~data['categoryName'].str.contains("라이트 노벨")]
+            data['stockStatus'] = data["stockStatus"].replace('', "구매 가능")
+            await cache_manager.save_weekly_data(data, self.year, self.month, self.week, page)
+            return data
+
         return data
 
 
@@ -121,6 +124,8 @@ async def test():
     print("test")
     titles = await data
     titles.to_csv("books.csv", index=False, encoding="utf-8-sig")
+    json = titles.to_json(orient="index", index=True, force_ascii=False, indent=4)
+    print(json)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import aiohttp
 import pandas as pd
 
 import Config
-from GoldenBough.utils.requestAPI import apiImporter
+from utils.requestAPI import apiImporter
 from aladin_api_helper import ApiRuntimeException
 
 

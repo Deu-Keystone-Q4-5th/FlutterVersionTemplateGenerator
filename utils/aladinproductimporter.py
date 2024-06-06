@@ -1,5 +1,5 @@
-from GoldenBough.utils import Config
-from GoldenBough.utils.requestAPI import apiImporter
+from utils import Config
+from utils.requestAPI import apiImporter
 
 
 class AladinProductImporter (apiImporter):

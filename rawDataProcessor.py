@@ -43,7 +43,7 @@ class RawDataProcessor:
         return BookData(self.getBookInfo(name))
 
 
-processor = RawDataProcessor("../datasets/books_updated.csv")
+processor = RawDataProcessor("datasets/books_updated.csv")
 # print(processor.getBookNames())
 print(processor.getBookInfo("The Hunger Games"))
 data = BookData(processor.getBookInfo("The Hunger Games"))

@@ -7,7 +7,7 @@ import aiofiles
 import asyncio
 import re
 
-from GoldenBough.utils import Config
+from utils import Config
 
 path = "cache"
 
@@ -60,9 +60,9 @@ class WeeklyCacheManager:
 
 
 async def test():
-    from GoldenBough.utils.aladin_api_helper import AladinItemListFinder
+    from utils.aladin_api_helper import AladinItemListFinder
     finder = AladinItemListFinder()
-    cache_manager = WeeklyCacheManager(cache_dir=os.path.join(Config.base_dir, "GoldenBough/cache"))
+    cache_manager = WeeklyCacheManager(cache_dir=os.path.join(Config.base_dir, "cache"))
 
     year = 2024
     month = 5

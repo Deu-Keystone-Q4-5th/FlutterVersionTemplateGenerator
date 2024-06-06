@@ -5,8 +5,8 @@ import sys
 
 
 def _createDirectory() :
-    if not os.path.isdir("../../logs"):
-        os.mkdir("../../logs")
+    if not os.path.isdir("../logs"):
+        os.mkdir("../logs")
 
 
 class LoggerManager:
