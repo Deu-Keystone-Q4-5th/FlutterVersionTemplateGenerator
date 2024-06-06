@@ -25,7 +25,7 @@ async def api():
     finder = AladinItemListFinder()
     finder.filter_sold_out(True).specific_date(2024, 5, 3).query("BlogBest").start_page(
         1).result_per_page(100).search_category(1)
-    data = finder.request_data()
+    data = finder.request()
     data = await data
     a = data.description.to_list()
     result = []

@@ -77,6 +77,7 @@ class AladinItemListFinder (apiImporter):
             args["outStockfilter"] = 1
 
         self.url = f"{self.url_base}?" + "&".join([f"{k}={v}" for k, v in args.items()])
+        print(self.url)
         return self.url
 
     async def request(self) -> pd.DataFrame:
@@ -115,7 +116,7 @@ async def test():
     data = finder.request()
     print("test")
     titles = await data
-    titles.to_csv("titles_all_no_lightnovel.csv", index=False, encoding="utf-8-sig")
+    titles.to_csv("books.csv", index=False, encoding="utf-8-sig")
 
 
 if __name__ == "__main__":
