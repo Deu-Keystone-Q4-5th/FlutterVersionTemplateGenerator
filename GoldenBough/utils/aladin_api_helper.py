@@ -1,10 +1,12 @@
 import os
+import time
+from datetime import datetime
 
 import aiohttp
 import asyncio
-import Config
 import pandas as pd
 
+from GoldenBough.utils import datetimeutils, Config
 from GoldenBough.utils.aladin_cache import WeeklyCacheManager
 from GoldenBough.utils.requestAPI import apiImporter
 
@@ -16,17 +18,16 @@ class AladinItemListFinder (apiImporter):
         self.config_manager = Config.configManager
         self.url_base = "http://www.aladin.co.kr/ttb/api/ItemList.aspx"
         self.ttb_key = self.config_manager.config.secret_key
-        self.query_type = "BlogBest"
+        self.query_type = "Bestseller"
         self.version = "20131101"
         self.search_target = "Book"
-        self.max_results = 10
+        self.max_results = 50
         self.start = 1
+        self.cover_size = "Big"
         self.is_json = True
         self.will_filter_sold_out = False
-        self.year = -1
-        self.month = -1
-        self.week = -1
-        self.category_id = 0
+        self.year, self.month, self.week = datetimeutils.get_month_week()
+        self.category_id = 1
 
     def filter_sold_out(self, value: bool):
         self.will_filter_sold_out = value
@@ -64,7 +65,8 @@ class AladinItemListFinder (apiImporter):
             "MaxResults": self.max_results,
             "start": self.start,
             "Output": output_format,
-            "CategoryId": self.category_id
+            "CategoryId": self.category_id,
+            "Cover": self.cover_size
         }
 
         if self.year != -1:
@@ -92,16 +94,18 @@ class AladinItemListFinder (apiImporter):
                         raise ApiRuntimeException(response_json["errorMessage"])
                     print(response_json)
                     # books are in item list so
+                    page = response_json["startIndex"]
                     data = pd.DataFrame(response_json.get('item', []))
-                    return await self.exclude_light_novel(data)
+                    return await self.exclude_light_novel(data, page)
                 else:
                     response.raise_for_status()
 
-    async def exclude_light_novel(self, data: pd.DataFrame) -> pd.DataFrame:
+    async def exclude_light_novel(self, data: pd.DataFrame, page: int) -> pd.DataFrame:
         # Light Novel is not a literature!
         if 'categoryName' in data.columns:
-            await cache_manager.save_weekly_data(data, self.year, self.month, self.week)
-            return data[~data['categoryName'].str.contains("라이트 노벨")]
+            modified_data = data[~data['categoryName'].str.contains("라이트 노벨")]
+            await cache_manager.save_weekly_data(modified_data, self.year, self.month, self.week, page)
+            return modified_data
         return data
 
 

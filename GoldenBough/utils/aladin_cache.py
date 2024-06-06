@@ -6,7 +6,8 @@ from pathlib import Path
 import aiofiles
 import asyncio
 import re
-import Config
+
+from GoldenBough.utils import Config
 
 path = "cache"
 
@@ -16,32 +17,32 @@ class WeeklyCacheManager:
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def get_week_string(self, year: int, month: int, week: int) -> str:
-        return f"{year}_{month:02d}_week{week}"
+    def get_week_string(self, year: int, month: int, week: int, page: int) -> str:
+        return f"{year}_{month:02d}_week{week}_page{page}"
 
-    async def save_weekly_data(self, data: pd.DataFrame, year: int, month: int, week: int):
-        week_string = self.get_week_string(year, month, week)
+    async def save_weekly_data(self, data: pd.DataFrame, year: int, month: int, week: int, page: int = 1):
+        week_string = self.get_week_string(year, month, week, page)
         file_path = self.cache_dir / f"titles_{week_string}.csv"
         async with aiofiles.open(file_path, 'w', encoding="utf-8-sig") as f:
             await f.write(data.to_csv(index=False))
         print(f"Data saved to {file_path}")
 
-    async def load_weekly_data(self, year: int, month: int, week: int) -> pd.DataFrame:
-        week_string = self.get_week_string(year, month, week)
+    async def load_weekly_data(self, year: int, month: int, week: int, page: int = 1) -> pd.DataFrame:
+        week_string = self.get_week_string(year, month, week, page)
         file_path = self.cache_dir / f"titles_{week_string}.csv"
         if file_path.exists():
             async with aiofiles.open(file_path, 'r', encoding="utf-8-sig") as f:
                 content = await f.read()
 
-            data = pd.read_csv(StringIO(content))
+            data = pd.read_csv(StringIO(content), dtype=str)
             print(f"Data loaded from {file_path}")
             return data
         else:
             print(f"No data found for {week_string}")
             return pd.DataFrame()
 
-    def is_week_cached(self, year: int, month: int, week: int) -> bool:
-        week_string = self.get_week_string(year, month, week)
+    def is_week_cached(self, year: int, month: int, week: int, page: int = 1) -> bool:
+        week_string = self.get_week_string(year, month, week, page)
         file_path = self.cache_dir / f"titles_{week_string}.csv"
         return file_path.exists()
 
@@ -67,8 +68,8 @@ async def test():
     month = 5
     week = 3
 
-    if cache_manager.is_week_cached(year, month, week):
-        data = await cache_manager.load_weekly_data(year, month, week)
+    if cache_manager.is_week_cached(year, month, week, 1):
+        data = await cache_manager.load_weekly_data(year, month, week, 1)
     else:
         finder.filter_sold_out(True).specific_date(year, month, week).query("Bestseller").start_page(1).result_per_page(
             100).search_category(1)
