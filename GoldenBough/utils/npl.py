@@ -18,8 +18,8 @@ def remove_stopword(text):
     for word in text:
         print(f"{word}처리중\n")
         if word not in stopwords:
-            result.append(text)
-    return result
+            word.append(text)
+    return word
 
 async def api():
     finder = AladinItemListFinder()
